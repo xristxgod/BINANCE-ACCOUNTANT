@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import UserMixin, login_user, login_required, logout_user, current_user
 
 import app.settings as settings
-from ..services.auth import AdminMixin, AdminAuth
+from ..services.auth import AdminMixin, AdminAuth, AdminStatus
 
 
 app = Blueprint('auth', __name__)
@@ -18,6 +18,7 @@ def login():
         if form.is_valid():
             admin = AdminMixin(username=form.username.data)
             if settings.ADMIN_2AF:
+                auth.change_status(status=AdminStatus.AUTH_2FA)
                 return redirect(url_for('auth.login_2fa'))
             login_user(admin)
             return redirect(url_for('auth.login_2fa'))
