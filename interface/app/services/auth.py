@@ -40,7 +40,7 @@ class AdminAuth(meta.Singleton):
         self._setup()
 
     def _setup(self):
-        if current_user.is_authenticated:
+        if bool(current_user) and current_user.is_authenticated:
             self.admin_mixin = AdminMixin(username=current_user.id)
             self.status = AdminStatus.AUTH
             self.start_session = datetime.now()

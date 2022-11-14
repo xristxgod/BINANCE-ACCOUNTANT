@@ -10,7 +10,6 @@ auth = AdminAuth()
 
 
 @app.route('/login', methods=['POST', 'GET'])
-@login_required
 def login():
     from ..forms import SignInForm
     form = SignInForm()
@@ -32,14 +31,13 @@ def login():
 
 
 @app.route("/login/2fa", methods=['POST', 'GET'])
-@login_required
 def login_2fa():
     from ..forms import SignIn2FAForm
     form = SignIn2FAForm()
-    if auth.status != 1:
+    if auth.status != AdminStatus.AUTH_2FA:
         return redirect(url_for('auth.login'))
     if form.validate_on_submit():
-        if form.code.data == auth.get_2fa_code():
+        if int(form.code.data) == auth.get_2fa_code():
             login_user(auth.admin_mixin)
             return redirect(url_for('main.index'))
         else:
