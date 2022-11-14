@@ -1,7 +1,7 @@
 
 def main():
-    import src
-    app = src.App()
+    import app
+    app = app.App()
     app.app.run(use_reloader=True)
 
 

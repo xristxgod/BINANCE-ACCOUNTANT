@@ -12,17 +12,17 @@ class App:
         self._set_views()
 
     def _set_config(self):
-        import src.settings as settings
+        import app.settings as settings
         self._app.config.from_pyfile(settings.SETTINGS_FILE)
 
     def _set_external_app(self):
-        import src.config as config
+        import app.config as config
         config.db.init_app(self._app)
         config.migrate.init_app(self._app)
         config.login_manager.init_app(self._app)
 
     def _set_views(self):
-        import src.views as views
+        import app.views as views
         self._app.register_blueprint(views.auth_app)
 
     @property

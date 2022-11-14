@@ -9,7 +9,7 @@ class SignInForm(FlaskForm):
     submit = SubmitField(label='Sign in')
 
     def is_valid(self) -> bool:
-        import src.settings as settings
+        import app.settings as settings
         if self.username == settings.ADMIN_USERNAME and self.password == settings.ADMIN_PASSWORD:
             return True
         return False
