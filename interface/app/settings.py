@@ -16,5 +16,7 @@ ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin')
 
 ADMIN_2AF = os.getenv('ADMIN_2FA', None)
+
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', None)
-ADMIN_TELEGRAM = os.getenv('ADMIN_TELEGRAM', None)
+ADMIN_TELEGRAM_ID = os.getenv('ADMIN_TELEGRAM_ID', None)
+ADMIN_PHONE_NUMBER = os.getenv('ADMIN_PHONE_NUMBER', None)

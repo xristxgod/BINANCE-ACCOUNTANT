@@ -5,6 +5,8 @@ from datetime import datetime
 from flask_login import UserMixin, current_user
 
 import meta
+import app.services.notification as notification
+import app.services.logger as logger
 from ..config import login_manager
 
 
@@ -39,16 +41,14 @@ class AdminAuth(meta.Singleton):
             self.start_session = datetime.now()
             self.last_update = datetime.now()
 
-    def record(self, text: str):
-        pass
-
     def change_status(self, status: AdminStatus):
+        logger.AuthLogger.log(message=f'Change status: {self.status} => {status}')
         self.status = status
         if self.status == AdminStatus.AUTH:
             self.start_session = datetime.now()
             self.last_update = datetime.now()
-
-            self.notification('Authorization')
+            logger.AuthLogger.log(message='Auth')
+            # celery_app.send_task(f'worker_sender.celery_worker.send_notification', args=[text], **extra)
 
 
 @login_manager.user_loader

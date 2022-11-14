@@ -45,5 +45,5 @@ class Logger(metaclass=MetaLogger):
     path: Optional[str] = None
 
     @classmethod
-    def log(cls, method: Methods, message: str) -> NoReturn:
+    def log(cls, message: str, method: Methods = Methods.INFO) -> NoReturn:
         getattr(cls.logger, method.value)(message)

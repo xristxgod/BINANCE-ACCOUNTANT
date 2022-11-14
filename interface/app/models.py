@@ -22,6 +22,7 @@ class Account(db.Model):
     network = db.Column(db.String(10), default=NetworkEnum.binance)
 
     email = db.Column(db.String(100), unique=True, nullable=True)
+    phone = db.Column(db.String(100), unique=True, nullable=True)
     telegram_id = db.Column(db.BigInteger, unique=True, nullable=True)
     active = db.Column(db.Integer, default=AccountStatus.active)
 
