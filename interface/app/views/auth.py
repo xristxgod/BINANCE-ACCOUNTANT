@@ -50,5 +50,7 @@ def login_2fa():
 
 
 @app.route('/logout')
+@login_required
 def logout():
-    pass
+    logout_user()
+    return redirect(url_for('auth.login'))
