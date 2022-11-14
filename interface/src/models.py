@@ -10,16 +10,20 @@ class NetworkEnum(enum.Enum):
     bybit = 'BYBIT'
 
 
+class AccountStatus(enum.Enum):
+    error = -1
+    active = 0
+    inactive = 1
+
+
 class Account(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True)
-
-    network = db.Column(db.String(100), default=NetworkEnum.binance)
+    network = db.Column(db.String(10), default=NetworkEnum.binance)
 
     email = db.Column(db.String(100), unique=True, nullable=True)
     telegram_id = db.Column(db.BigInteger, unique=True, nullable=True)
-
-    active = db.Column(db.Boolean, default=True)
+    active = db.Column(db.Integer, default=AccountStatus.active)
 
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     updated = db.Column(db.DateTime(timezone=True), onupdate=func.now())
