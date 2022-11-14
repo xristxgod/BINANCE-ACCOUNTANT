@@ -1,5 +1,15 @@
 import logging
+import enum as e
+from typing import NoReturn
 from typing import Optional, Tuple, Dict
+
+
+class Methods(e.Enum):
+    DEBUG = 'debug'
+    INFO = 'info'
+    ERROR = 'error'
+    WARNING = 'warning'
+    CRITICAL = 'critical'
 
 
 class MetaSingleton(type):
@@ -33,3 +43,7 @@ class MetaLogger(type):
 
 class Logger(metaclass=MetaLogger):
     path: Optional[str] = None
+
+    @classmethod
+    def log(cls, method: Methods, message: str) -> NoReturn:
+        getattr(cls.logger, method.value)(message)
