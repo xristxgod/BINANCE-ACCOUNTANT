@@ -31,11 +31,13 @@ def login():
     )
 
 
-@app.route("/login/2fa/<username>", methods=['POST', 'GET'])
+@app.route("/login/2fa", methods=['POST', 'GET'])
 @login_required
-def login_2fa(username: str):
+def login_2fa():
     from ..forms import SignIn2FAForm
     form = SignIn2FAForm()
+    if auth.status != 1:
+        return redirect(url_for('auth.login'))
     return render_template(
         'auth/login_2fa.html',
         form=form
