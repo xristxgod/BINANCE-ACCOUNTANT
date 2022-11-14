@@ -5,7 +5,7 @@ from datetime import datetime
 from flask_login import UserMixin, current_user
 
 import meta
-import app.services.notification as notification
+import app.settings as settings
 import app.services.logger as logger
 from ..config import login_manager
 
@@ -27,9 +27,13 @@ class AdminMixin(UserMixin):
 
 
 class AdminAuth(meta.Singleton):
+
+    admin_2fa_code = settings.ADMIN_2AF_CODE
+
     def __init__(self):
         self.status: AdminStatus = AdminStatus.NOT_AUTH
 
+        self.admin_mixin: Optional[AdminMixin] = None
         self.start_session: Optional[datetime] = None
         self.last_update: Optional[datetime] = None
 
@@ -37,9 +41,23 @@ class AdminAuth(meta.Singleton):
 
     def _setup(self):
         if current_user.is_authenticated:
+            self.admin_mixin = AdminMixin(username=current_user.id)
             self.status = AdminStatus.AUTH
             self.start_session = datetime.now()
             self.last_update = datetime.now()
+
+    @property
+    def admin(self) -> AdminMixin:
+        return self.admin_mixin
+
+    @admin.setter
+    def admin(self, value: AdminMixin):
+        self.admin_mixin = value
+
+    @classmethod
+    def get_2fa_code(cls) -> int:
+        import pyotp
+        return int(pyotp.TOTP(cls.admin_2fa_code).now())
 
     def change_status(self, status: AdminStatus):
         logger.AuthLogger.log(message=f'Change status: {self.status} => {status}')

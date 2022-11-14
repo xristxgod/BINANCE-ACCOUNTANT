@@ -16,12 +16,12 @@ def login():
     form = SignInForm()
     if form.validate_on_submit():
         if form.is_valid():
-            admin = AdminMixin(username=form.username.data)
-            if settings.ADMIN_2AF:
+            auth.admin_mixin = AdminMixin(username=form.username.data)
+            if settings.ADMIN_2AF_CODE:
                 auth.change_status(status=AdminStatus.AUTH_2FA)
                 return redirect(url_for('auth.login_2fa'))
-            login_user(admin)
-            return redirect(url_for('auth.login_2fa'))
+            login_user(auth.admin_mixin)
+            return redirect(url_for('main.index'))
         else:
             flash('Username and password are not match! Please try again', category='danger')
 
@@ -38,6 +38,13 @@ def login_2fa():
     form = SignIn2FAForm()
     if auth.status != 1:
         return redirect(url_for('auth.login'))
+    if form.validate_on_submit():
+        if form.code.data == auth.get_2fa_code():
+            login_user(auth.admin_mixin)
+            return redirect(url_for('main.index'))
+        else:
+            flash('Username and password are not match! Please try again', category='danger')
+
     return render_template(
         'auth/login_2fa.html',
         form=form

@@ -18,7 +18,3 @@ class SignInForm(FlaskForm):
 class SignIn2FAForm(FlaskForm):
     code = IntegerField(label='Code:', validators=[Length(min=6, max=6), DataRequired()])
     submit = SubmitField(label='Sign in')
-
-    def is_valid(self) -> bool:
-        pass
-
