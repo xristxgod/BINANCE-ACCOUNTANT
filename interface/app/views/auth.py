@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import UserMixin, login_user, login_required, logout_user, current_user
+from flask import Blueprint, render_template, redirect, url_for, flash
+from flask_login import login_user, login_required, logout_user
 
 import app.settings as settings
 from ..services.auth import AdminMixin, AdminAuth, AdminStatus

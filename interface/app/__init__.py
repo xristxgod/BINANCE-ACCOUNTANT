@@ -24,6 +24,7 @@ class App:
     def _set_views(self):
         import app.views as views
         self._app.register_blueprint(views.auth_app)
+        self._app.register_blueprint(views.main_app)
 
     @property
     def app(self) -> Flask:
