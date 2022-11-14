@@ -11,7 +11,6 @@ def init_app():
 
     config.db.init_app(app)
     config.migrate.init_app(app)
-    config.bcrypt.init_app(app)
     config.login_manager.init_app(app)
 
     return app
