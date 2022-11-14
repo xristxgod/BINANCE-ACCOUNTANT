@@ -30,3 +30,15 @@ class Account(db.Model):
 
     def __repr__(self):
         return f'<Account {self.name}>'
+
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(15))
+    text = db.Column(db.String(255))
+
+    active = db.Column(db.Boolean, default=True)
+    created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return f'<Notification {self.title}>'

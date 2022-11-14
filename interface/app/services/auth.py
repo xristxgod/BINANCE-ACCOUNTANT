@@ -39,7 +39,7 @@ class AdminAuth(meta.Singleton):
             self.start_session = datetime.now()
             self.last_update = datetime.now()
 
-    def _send_message(self, text: str):
+    def record(self, text: str):
         pass
 
     def change_status(self, status: AdminStatus):
@@ -48,7 +48,7 @@ class AdminAuth(meta.Singleton):
             self.start_session = datetime.now()
             self.last_update = datetime.now()
 
-            self._send_message('Authorization')
+            self.notification('Authorization')
 
 
 @login_manager.user_loader
