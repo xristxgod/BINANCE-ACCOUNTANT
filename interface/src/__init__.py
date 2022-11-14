@@ -1,16 +1,30 @@
 from flask import Flask
 
 
-def init_app():
-    import src.config as config
-    import src.settings as settings
+class App:
+    def __init__(self):
+        self._app = Flask(__name__)
+        self._setup()
 
-    app = Flask(__name__)
+    def _setup(self):
+        self._set_config()
+        self._set_external_app()
+        self._set_views()
 
-    app.config.from_pyfile(settings)
+    def _set_config(self):
+        import src.settings as settings
+        self._app.config.from_pyfile(settings.SETTINGS_FILE)
 
-    config.db.init_app(app)
-    config.migrate.init_app(app)
-    config.login_manager.init_app(app)
+    def _set_external_app(self):
+        import src.config as config
+        config.db.init_app(self._app)
+        config.migrate.init_app(self._app)
+        config.login_manager.init_app(self._app)
 
-    return app
+    def _set_views(self):
+        import src.views as views
+        self._app.register_blueprint(views.auth_app)
+
+    @property
+    def app(self) -> Flask:
+        return self._app
