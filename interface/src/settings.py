@@ -8,9 +8,9 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-ADMIN_LOGIN = os.getenv('ADMIN_LOGIN')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin')
 
-ADMIN_2AF = os.getenv('ADMIN_2AF', None)
+ADMIN_2AF = os.getenv('ADMIN_2FA', None)
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', None)
 ADMIN_TELEGRAM = os.getenv('ADMIN_TELEGRAM', None)
