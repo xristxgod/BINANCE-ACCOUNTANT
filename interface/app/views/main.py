@@ -1,14 +1,14 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
-from flask_login import login_required
+
+from app.services.auth import is_auth
 
 
 app = Blueprint('main', __name__)
 
 
 @app.route('/')
-@app.route('/index')
-@login_required
+@is_auth
 def index():
     return render_template(
-        'main/login.html'
+        'main/index.html'
     )

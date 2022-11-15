@@ -1,7 +1,9 @@
 import enum
-from typing import Optional
+import functools
+from typing import Optional, Callable
 from datetime import datetime
 
+from flask import redirect, url_for
 from flask_login import UserMixin, current_user
 
 import meta
@@ -73,3 +75,11 @@ class AdminAuth(meta.Singleton):
 def load_user(username: str):
     return AdminMixin(username=username)
 
+
+def is_auth(func: Callable):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
+        return func(*args, **kwargs)
+    return wrapper
