@@ -1,9 +1,12 @@
 import decimal
+import uuid
+
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
+import core.enums as enums
 from core.credential_manager import WalletCredentialManager, WalletCredential
 
 
@@ -131,6 +134,15 @@ class ExternalTransactions(models.Model):
     amount = models.DecimalField(_('Amount'), max_digits=18, decimal_places=6, default=0)
     fee = models.DecimalField(_('Commission'), max_digits=18, decimal_places=6, default=0)
 
+    created = models.DateTimeField(_('Created'), auto_now_add=True)
+    updated = models.DateTimeField(_('Updated'), auto_now=True)
+
+    type = models.CharField(
+        _('User type'),
+        choices=enums.ExternalTransactionType.choices,
+        default=enums.ExternalTransactionType.RECIPIENT
+    )
+
     token = models.ForeignKey(
         Network,
         related_name='external_transaction_token',
@@ -149,8 +161,36 @@ class ExternalTransactions(models.Model):
     )
 
     def __str__(self):
-        return f'Balance: {self.pk}'
+        return f'Transaction: {self.transaction_id}'
 
     class Meta:
         verbose_name = _('External Transaction')
         verbose_name_plural = _('External Transactions')
+
+
+class InternalTransaction(models.Model):
+    transaction_id = models.UUIDField(_('Internal transaction ID'), default=uuid.uuid4(), primary_key=True)
+
+    sender = models.ForeignKey(
+        Wallet,
+        related_name='sender_wallet_crypto_internal_transaction',
+        on_delete=models.SET_NULL
+    )
+    recipient = models.ForeignKey(
+        Wallet,
+        related_name='recipient_wallet_crypto_internal_transaction',
+        on_delete=models.SET_NULL
+    )
+
+    amount = models.DecimalField(_('Amount'), max_digits=18, decimal_places=6, default=0)
+    fee = models.DecimalField(_('Commission'), max_digits=18, decimal_places=6, default=0)
+
+    created = models.DateTimeField(_('Created'), auto_now_add=True)
+    updated = models.DateTimeField(_('Updated'), auto_now=True)
+
+    def __str__(self):
+        return f'Transaction: {self.transaction_id}'
+
+    class Meta:
+        verbose_name = _('Internal Transaction')
+        verbose_name_plural = _('Internal Transactions')
