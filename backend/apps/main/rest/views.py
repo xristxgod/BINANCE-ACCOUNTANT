@@ -6,7 +6,7 @@ from drf_spectacular.utils import extend_schema
 
 from ..models import Account
 from .serializers import AccountSerializer
-# from core.auth.authentication import ApiTokenAuthentication
+# from core.login.authentication import ApiTokenAuthentication
 
 
 class AccountsView(GenericAPIView):
