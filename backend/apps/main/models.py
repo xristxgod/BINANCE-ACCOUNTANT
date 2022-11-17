@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
+import core.enums as enums
 from core.credential_manager import AccountCredentialManager, ApiCredential
 
 
@@ -54,12 +55,12 @@ class Telegram(models.Model):
 
 
 class Account(models.Model):
-    class AccountNetwork(models.TextChoices):
-        BINANCE = 'BINANCE', _('Binance account')
-        BYBIT = 'BYBIT', _('ByBit account')
-
     name = models.CharField(_('Account name'), max_length=55, unique=True)
-    network = models.CharField(_('Network'), choices=AccountNetwork.choices, default=AccountNetwork.BINANCE)
+    network = models.CharField(
+        _('Network'),
+        choices=enums.AccountNetwork.choices,
+        default=enums.AccountNetwork.BINANCE
+    )
 
     created = models.DateTimeField(_('Created'), auto_now_add=True)
     updated = models.DateTimeField(_('Updated'), auto_now=True)
@@ -92,3 +93,20 @@ class Account(models.Model):
     class Meta:
         verbose_name = _('Account')
         verbose_name_plural = _('Accounts')
+
+
+class Balances(models.Model):
+    amount = models.DecimalField(_('Amount'), max_digits=8, decimal_places=8, default=0)
+    token = models.CharField(
+        _('Token'),
+        choices=enums.CryptoToken.choices,
+        default=enums.CryptoToken.NATIVE
+    )
+    network = models.CharField(
+        _('Network'),
+        choices=enums.CryptoNetwork.choices,
+        default=enums.CryptoNetwork.TRON
+    )
+
+    created = models.DateTimeField(_('Created'), auto_now_add=True)
+    updated = models.DateTimeField(_('Updated'), auto_now=True)
