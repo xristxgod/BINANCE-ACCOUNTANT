@@ -7,18 +7,18 @@ from django.utils.translation import gettext_lazy as _
 from core.credential_manager import WalletCredentialManager, WalletCredential
 
 
-class CryptoNetwork(models.Model):
+class Network(models.Model):
     name = models.CharField(_('Network name'), max_length=25, primary_key=True)
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = _('Crypto Network')
-        verbose_name_plural = _('Crypto Networks')
+        verbose_name = _('Network')
+        verbose_name_plural = _('Networks')
 
 
-class CryptoToken(models.Model):
+class Token(models.Model):
     name = models.CharField(_('Token name'), max_length=25)
     symbol = models.CharField(_('Token symbol'), max_length=25)
     token_address = models.CharField(_('Token address'), default=None, null=True, blank=True, unique=True)
@@ -27,7 +27,7 @@ class CryptoToken(models.Model):
     extra = models.JSONField(_('Extra'), default=None, null=True, blank=True)
 
     network = models.ForeignKey(
-        CryptoNetwork,
+        Network,
         related_name='token_network',
         on_delete=models.CASCADE
     )
@@ -36,14 +36,14 @@ class CryptoToken(models.Model):
         return f'{self.network} :: {self.name}'
 
     class Meta:
-        verbose_name = _('Crypto Token')
-        verbose_name_plural = _('Crypto Token')
+        verbose_name = _('Token')
+        verbose_name_plural = _('Token')
 
 
-class CryptoWallet(models.Model):
+class Wallet(models.Model):
     address: str = models.CharField(_('Wallet address'), max_length=255, primary_key=True, validators=[])
     network = models.ForeignKey(
-        CryptoNetwork,
+        Network,
         related_name='wallet_network',
         on_delete=models.CASCADE
     )
@@ -75,15 +75,15 @@ class CryptoWallet(models.Model):
         return f'Wallet {self.pk} :: {self.network}'
 
     class Meta:
-        verbose_name = _('Crypto Wallet')
-        verbose_name_plural = _('Crypto Wallets')
+        verbose_name = _('Wallet')
+        verbose_name_plural = _('Wallets')
 
 
-class CryptoBalances(models.Model):
+class Balance(models.Model):
     amount = models.DecimalField(_('Amount'), max_digits=8, decimal_places=8, default=0)
     token = models.ForeignKey(
-        CryptoNetwork,
-        related_name='token_network',
+        Network,
+        related_name='balance_token',
         on_delete=models.CASCADE
     )
 
@@ -98,7 +98,7 @@ class CryptoBalances(models.Model):
         on_delete=models.CASCADE
     )
     wallet = models.ForeignKey(
-        CryptoWallet,
+        Wallet,
         related_name='wallet_balance',
         on_delete=models.SET_NULL
     )
@@ -119,11 +119,11 @@ class CryptoBalances(models.Model):
         return f'Balance: {self.pk}'
 
     class Meta:
-        verbose_name = _('Crypto Balance')
-        verbose_name_plural = _('Crypto Balances')
+        verbose_name = _('Balance')
+        verbose_name_plural = _('Balances')
 
 
-class CryptoExternalTransactions(models.Model):
+class ExternalTransactions(models.Model):
     transaction_id = models.CharField(_('Transaction ID'), max_length=255, primary_key=True)
 
     address = models.CharField(_('From Wallet address'), max_length=255)
@@ -131,10 +131,10 @@ class CryptoExternalTransactions(models.Model):
     amount = models.DecimalField(_('Amount'), max_digits=18, decimal_places=6, default=0)
     fee = models.DecimalField(_('Commission'), max_digits=18, decimal_places=6, default=0)
 
-    token = models.CharField(
-        _('Token'),
-        choices=enums.CryptoToken.choices,
-        default=enums.CryptoToken.NATIVE
+    token = models.ForeignKey(
+        Network,
+        related_name='external_transaction_token',
+        on_delete=models.CASCADE
     )
 
     user: AbstractUser = models.ForeignKey(
@@ -143,8 +143,8 @@ class CryptoExternalTransactions(models.Model):
         on_delete=models.CASCADE
     )
     wallet = models.ForeignKey(
-        CryptoWallet,
-        related_name='wallet_crypto_external_transaction',
+        Wallet,
+        related_name='wallet_external_transaction',
         on_delete=models.SET_NULL
     )
 
@@ -152,5 +152,5 @@ class CryptoExternalTransactions(models.Model):
         return f'Balance: {self.pk}'
 
     class Meta:
-        verbose_name = _('Crypto External Transaction')
-        verbose_name_plural = _('Crypto External Transactions')
+        verbose_name = _('External Transaction')
+        verbose_name_plural = _('External Transactions')
