@@ -1,10 +1,10 @@
-import os
 import dataclasses
 import json
 import typing
 
 import keyring
 
+import core.credential_manager.base as base
 from core.services.logger import AccountCredentialManagerLogger as Logger
 from mainapp.settings import ACCOUNT_CREDENTIAL_MANAGER_SERVICE_ID
 
@@ -15,11 +15,11 @@ class ApiCredential:
     secretKey: str
 
 
-class AccountCredentialManager:
+class AccountCredentialManager(base.AbstractCredentialManager):
     service_id = ACCOUNT_CREDENTIAL_MANAGER_SERVICE_ID
 
     @classmethod
-    def set(cls, account: str, *, keys: ApiCredential):
+    def set(cls, account: str, *, keys: ApiCredential) -> typing.NoReturn:
         item = keyring.get_password(cls.service_id, account)
         if item is None:
             Logger.log('Account: {} :: Set Keys'.format(account))
@@ -37,7 +37,7 @@ class AccountCredentialManager:
             return ApiCredential(**json.loads(keys))
 
     @classmethod
-    def remove(cls, account: str):
+    def remove(cls, account: str) -> typing.NoReturn:
         keys = keyring.get_password(cls.service_id, account)
         if keys is not None:
             Logger.log('Account: {} :: Delete Keys'.format(account))
