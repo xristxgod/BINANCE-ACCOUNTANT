@@ -33,7 +33,7 @@ class Google2FA(models.Model):
 
 
 class Telegram(models.Model):
-    chat_id = models.BigIntegerField(_('Telegram Chat ID'), max_length=10, primary_key=True)
+    chat_id = models.BigIntegerField(_('Telegram Chat ID'), primary_key=True)
 
     created = models.DateTimeField(_('Created'), auto_now_add=True)
     updated = models.DateTimeField(_('Updated'), auto_now=True)
@@ -58,6 +58,7 @@ class Account(models.Model):
     name = models.CharField(_('Account name'), max_length=55, unique=True)
     network = models.CharField(
         _('Network'),
+        max_length=20,
         choices=enums.AccountNetwork.choices,
         default=enums.AccountNetwork.BINANCE
     )

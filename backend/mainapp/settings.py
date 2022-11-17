@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'apps.user_profile.apps.UserProfileConfig',
     'apps.crypto_wallet.apps.CryptoWalletConfig',
 
-    'core.auth.apps.AuthConfig',
+    # 'core.auth.apps.AuthConfig',
 ]
 
 MIDDLEWARE = [
@@ -135,4 +135,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom values
 ACCOUNT_CREDENTIAL_MANAGER_SERVICE_ID = os.getenv('ACCOUNT_CREDENTIAL_MANAGER_SERVICE_ID', 'API_KEYS_STORAGE')
 WALLET_CREDENTIAL_MANAGER_SERVICE_ID = os.getenv('WALLET_CREDENTIAL_MANAGER_SERVICE_ID', 'WALLET_STORAGE')
-LOGS_DIR = ''
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')

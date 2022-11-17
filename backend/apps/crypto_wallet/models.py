@@ -24,7 +24,11 @@ class Network(models.Model):
 class Token(models.Model):
     name = models.CharField(_('Token name'), max_length=25)
     symbol = models.CharField(_('Token symbol'), max_length=25)
-    token_address = models.CharField(_('Token address'), default=None, null=True, blank=True, unique=True)
+    token_address = models.CharField(
+        _('Token address'), max_length=255,
+        default=None, null=True,
+        blank=True, unique=True
+    )
 
     decimals = models.IntegerField(_('Decimals'), default=8)
     extra = models.JSONField(_('Extra'), default=None, null=True, blank=True)
@@ -103,7 +107,7 @@ class Balance(models.Model):
     wallet = models.ForeignKey(
         Wallet,
         related_name='wallet_balance',
-        on_delete=models.SET_NULL
+        on_delete=models.CASCADE
     )
 
     @property
@@ -139,6 +143,7 @@ class ExternalTransactions(models.Model):
 
     type = models.CharField(
         _('User type'),
+        max_length=50,
         choices=enums.ExternalTransactionType.choices,
         default=enums.ExternalTransactionType.RECIPIENT
     )
@@ -157,7 +162,7 @@ class ExternalTransactions(models.Model):
     wallet = models.ForeignKey(
         Wallet,
         related_name='wallet_external_transaction',
-        on_delete=models.SET_NULL
+        on_delete=models.CASCADE
     )
 
     def __str__(self):
@@ -173,13 +178,15 @@ class InternalTransaction(models.Model):
 
     sender = models.ForeignKey(
         Wallet,
+        default=None,
         related_name='sender_wallet_crypto_internal_transaction',
-        on_delete=models.SET_NULL
+        on_delete=models.SET_DEFAULT
     )
     recipient = models.ForeignKey(
         Wallet,
+        default=None,
         related_name='recipient_wallet_crypto_internal_transaction',
-        on_delete=models.SET_NULL
+        on_delete=models.SET_DEFAULT
     )
 
     amount = models.DecimalField(_('Amount'), max_digits=18, decimal_places=6, default=0)
