@@ -1,4 +1,3 @@
-import decimal
 from typing import Optional
 
 from django.db import models
@@ -7,7 +6,6 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
 import core.enums as enums
-import apps.wallet.models as crypto_wallet_models
 from core.credential_manager import AccountCredentialManager, ApiCredential
 
 
@@ -97,47 +95,3 @@ class Account(models.Model):
     class Meta:
         verbose_name = _('Account')
         verbose_name_plural = _('Accounts')
-
-
-class Balances(models.Model):
-    amount = models.DecimalField(_('Amount'), max_digits=8, decimal_places=8, default=0)
-    token = models.CharField(
-        _('Token'),
-        choices=enums.CryptoToken.choices,
-        default=enums.CryptoToken.NATIVE
-    )
-
-    active = models.BooleanField(_('Active'), default=True)
-
-    created = models.DateTimeField(_('Created'), auto_now_add=True)
-    updated = models.DateTimeField(_('Updated'), auto_now=True)
-
-    user: AbstractUser = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='user_balance',
-        on_delete=models.CASCADE
-    )
-    wallet = models.ForeignKey(
-        crypto_wallet_models.CryptoWallet,
-        related_name='user_balance',
-        on_delete=models.SET_NULL
-    )
-
-    @property
-    def balance(self) -> decimal.Decimal:
-        return self.amount
-
-    @balance.setter
-    def balance(self, balance: decimal.Decimal):
-        self.amount = balance
-
-    @property
-    def balance_usd(self) -> str:
-        raise NotImplementedError
-
-    def __str__(self):
-        return f'Balance: {self.pk}'
-
-    class Meta:
-        verbose_name = _('Balance')
-        verbose_name_plural = _('Balances')
