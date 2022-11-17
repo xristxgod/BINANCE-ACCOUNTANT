@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'apps.dashboard.apps.DashboardConfig',
     'apps.main.apps.MainConfig',
     'apps.user_profile.apps.UserProfileConfig',
-    'apps.wallet.apps.WalletConfig',
+    'apps.crypto_wallet.apps.CryptoWalletConfig',
 
     'core.auth.apps.AuthConfig',
 ]
