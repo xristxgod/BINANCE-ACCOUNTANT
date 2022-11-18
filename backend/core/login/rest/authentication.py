@@ -5,7 +5,7 @@ from rest_framework import exceptions
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authentication import get_authorization_header
 
-from .models import AuthToken
+from core.login.models import AuthToken
 
 
 class ApiTokenAuthentication(TokenAuthentication):
