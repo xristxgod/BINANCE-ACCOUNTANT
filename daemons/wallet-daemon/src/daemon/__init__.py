@@ -13,10 +13,6 @@ class BaseDaemon(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def parsing(self):
-        pass
-
-    @abc.abstractmethod
     async def processing_block(self):
         pass
 
@@ -37,6 +33,9 @@ class TronDaemon(BaseDaemon):
     core = core.TronDaemonCore
 
     def __init__(self):
+        pass
+
+    async def handle(self):
         pass
 
     async def processing_transaction(self):
