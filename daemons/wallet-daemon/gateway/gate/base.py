@@ -36,6 +36,10 @@ class DefaultBlock:
     transactions: List[DefaultTransaction]
 
 
+class BaseNode:
+    pass
+
+
 class BaseBlockManager:
     file_path: str
 
@@ -53,21 +57,25 @@ class BaseBlockManager:
                 return await file.read()
 
     def __init__(self, *args, **kwargs):
+        self.gate = kwargs.get('gate')
         self.manager = self.FileManager(file=self.file_path)
 
-    @abc.abstractmethod
-    async def get_block_by_id(self, block: int) -> List[DefaultBlock]: ...
+    async def get_block_by_id(self, block: int) -> DefaultBlock:
+        return await self.gate.get_latest_block(block)
 
-    @abc.abstractmethod
-    async def get_block_now(self) -> int: ...
+    async def get_block_number(self) -> int:
+        return await self.gate.get_latest_block_number()
 
     # Daemon function
 
-    @abc.abstractmethod
-    async def get_block_in_storage(self) -> int: ...
+    async def get_block_in_storage(self) -> int:
+        block_number = await self.manager.read()
+        if block_number:
+            return int(block_number)
+        return await self.get_block_number()
 
-    @abc.abstractmethod
-    async def save_block_to_storage(self, block: int) -> NoReturn: ...
+    async def save_block_to_storage(self, block: int) -> NoReturn:
+        return await self.manager.write(block_number=block)
 
 
 class BaseSmartContract:
@@ -107,8 +115,8 @@ class BaseWalletManager:
     async def get_optimal_fee(self, from_: str, to: str, amount: decimal.Decimal) -> decimal.Decimal: ...
 
 
-class BaseNode:
-    gate_url: str
+class BaseGateClient:
+    cls_node: Type[BaseNode]
 
     cls_smart_contract: Type[BaseSmartContract]
 
@@ -120,16 +128,18 @@ class BaseNode:
     cls_response_block: DefaultBlock
 
     def __init__(self, **kwargs):
+        self.node = self.cls_node()
+
         self.__block = self.cls_block_manager(
-            gate=kwargs.get('gate')
+            node=self.node
         )
         self.__transaction = self.cls_transaction_manager(
-            gate=kwargs.get('gate'),
+            node=self.node,
             logger=kwargs.get('logger'),
             cls_smart_contract=self.cls_smart_contract
         )
         self.__wallet = self.cls_wallet_manager(
-            gate=kwargs.get('gate'),
+            node=self.node,
             logger=kwargs.get('logger'),
             cls_smart_contract=self.cls_smart_contract
         )
@@ -143,5 +153,4 @@ class BaseNode:
     def wallet(self) -> BaseWalletManager:
         return self.__wallet
 
-    @abc.abstractproperty
     def node(self): ...
