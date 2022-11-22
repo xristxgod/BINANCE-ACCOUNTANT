@@ -5,7 +5,7 @@ class BaseNode:
     gate_url: str
 
 
-class TronNode:
+class TronNode(BaseNode):
 
     gate_url = settings.TRON_GATE
 
