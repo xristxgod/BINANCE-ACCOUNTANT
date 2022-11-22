@@ -1,5 +1,5 @@
 import logging
-from typing import NoReturn
+from typing import NoReturn, List
 
 import src.settings as settings
 import gateway.gate.base as base
@@ -15,13 +15,21 @@ class BlockManager(base.BaseBlockManager):
 
         super(BlockManager, self).__init__(*args, **kwargs)
 
-    def get_block_now(self) -> int:
+    async def get_block_by_id(self, block: int) -> List[base.DefaultBlock]:
+        block = await self.gate.get_block(block)
+        # Packed
+        ...
+
+    async def get_block_now(self) -> int:
         return await self.gate.get_latest_block_number()
 
-    def get_block_in_storage(self) -> int:
-        return await self.manager.read()
+    async def get_block_in_storage(self) -> int:
+        block_number = await self.manager.read()
+        if block_number:
+            return int(block_number)
+        return await self.get_block_now()
 
-    def save_block_to_storage(self, block: int) -> NoReturn:
+    async def save_block_to_storage(self, block: int) -> NoReturn:
         return await self.manager.write(block=block)
 
 

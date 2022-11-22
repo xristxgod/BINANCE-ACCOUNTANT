@@ -2,25 +2,38 @@ import abc
 import decimal
 import logging
 from dataclasses import dataclass
-from typing import NoReturn, Type
-from typing import List
+from typing import NoReturn, Type, List
+
+import aiofiles
 
 
 @dataclass()
-class BaseHeader:
+class DefaultBlockHeader:
     block: int
     timestamp: int
 
 
 @dataclass()
-class BaseTransaction:
-    pass
+class DefaultParticipant:
+    address: str
+    amount: decimal.Decimal
 
 
 @dataclass()
-class BaseBlock:
-    headers: BaseHeader
-    transactions: List[BaseTransaction]
+class DefaultTransaction:
+    transactionId: str
+    amount: decimal.Decimal
+    fee: decimal.Decimal
+    inputs: List[DefaultParticipant]
+    outputs: List[DefaultParticipant]
+    timestamp: int
+    token: str
+
+
+@dataclass()
+class DefaultBlock:
+    headers: DefaultBlockHeader
+    transactions: List[DefaultTransaction]
 
 
 class BaseBlockManager:
@@ -29,19 +42,21 @@ class BaseBlockManager:
     class FileManager:
 
         def __init__(self, file: str):
-            pass
+            self.file = file
 
-        async def write(self, block: int):
-            pass
+        async def write(self, block_number: int) -> NoReturn:
+            async with aiofiles.open(self.file, 'w', encoding='utf-8') as file:
+                await file.write(str(block_number))
 
-        async def read(self):
-            pass
+        async def read(self) -> str:
+            async with aiofiles.open(self.file, "r", encoding='utf-8') as file:
+                return await file.read()
 
     def __init__(self, *args, **kwargs):
         self.manager = self.FileManager(file=self.file_path)
 
     @abc.abstractmethod
-    async def get_block_by_id(self, block: int) -> List[BaseBlock]: ...
+    async def get_block_by_id(self, block: int) -> List[DefaultBlock]: ...
 
     @abc.abstractmethod
     async def get_block_now(self) -> int: ...
@@ -97,8 +112,8 @@ class BaseNode:
     transaction_manager: Type[BaseTransactionManager]
     payment_manager: Type[BasePaymentManager]
 
-    cls_response_transaction: BaseTransaction
-    cls_response_block: BaseBlock
+    cls_response_transaction: DefaultTransaction
+    cls_response_block: DefaultBlock
 
     def __init__(self, **kwargs):
         self.__block = self.block_manager(
