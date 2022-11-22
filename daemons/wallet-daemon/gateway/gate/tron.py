@@ -1,3 +1,4 @@
+import logging
 from typing import NoReturn
 
 import src.settings as settings
@@ -18,10 +19,10 @@ class BlockManager(base.BaseBlockManager):
         return await self.gate.get_latest_block_number()
 
     def get_block_in_storage(self) -> int:
-        return await self.controller.read()
+        return await self.manager.read()
 
     def save_block_to_storage(self, block: int) -> NoReturn:
-        return await self.controller.write(block=block)
+        return await self.manager.write(block=block)
 
 
 class TransactionManager(base.BaseTransactionManager):
@@ -34,9 +35,8 @@ class Node(base.BaseNode):
 
     block_manager = BlockManager
     transaction_manager = TransactionManager
-    logger = ''
 
-    def __init__(self, **kwargs):
+    def __init__(self, logger: logging, **kwargs):
         from tronpy.async_tron import AsyncTron, AsyncHTTPProvider
 
         self.gate = AsyncTron(provider=AsyncHTTPProvider(endpoint_uri=self.gate_url))
@@ -48,12 +48,8 @@ class Node(base.BaseNode):
 
     @property
     def node(self):
-        return self.gate
-
-    @property
-    def block(self) -> base.BaseBlockManager:
-        return self.block_controller
-
-    @property
-    def transaction(self) -> base.BaseTransactionManager:
-        return self.transaction_controller
+        try:
+            # If node died
+            return self.gate
+        except:
+            pass
