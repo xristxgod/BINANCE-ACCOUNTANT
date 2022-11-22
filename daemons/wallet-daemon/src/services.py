@@ -1,7 +1,10 @@
-class FileController:
+class FileBlockController:
 
-    def write(self):
+    def __init__(self, file: str):
         pass
 
-    def read(self):
+    async def write(self, block: int):
+        pass
+
+    async def read(self):
         pass

@@ -1,0 +1,2 @@
+class BaseTransactionManager:
+    pass
