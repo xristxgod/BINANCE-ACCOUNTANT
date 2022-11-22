@@ -41,8 +41,8 @@ class Node(base.BaseNode):
 
     gate_url = settings.TRON_GATE_URL
 
-    block_manager = BlockManager
-    transaction_manager = TransactionManager
+    cls_block_manager = BlockManager
+    cls_transaction_manager = TransactionManager
 
     def __init__(self, logger: logging, **kwargs):
         from tronpy.async_tron import AsyncTron, AsyncHTTPProvider

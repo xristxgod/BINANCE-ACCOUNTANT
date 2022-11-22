@@ -72,14 +72,21 @@ class BaseBlockManager:
 
 class BaseSmartContract:
 
-    @abc.abstractmethod
-    def connect(self, address: str): ...
+    @abc.abstractclassmethod
+    async def connect(cls, address: str): ...
 
 
 class BaseTransactionManager:
 
-    def __init__(self, logger: logging, **kwargs):
+    def __init__(self, logger: logging, cls_smart_contract: Type[BaseSmartContract], **kwargs):
         self.logger = logger
+        self.smart_contract = cls_smart_contract
+
+    @abc.abstractmethod
+    async def create_transaction(self, from_: str, to: str, amount: decimal.Decimal) -> object: ...
+
+    @abc.abstractmethod
+    async def send_transaction(self, transaction_hash: str, private_key: str) -> object: ...
 
     @abc.abstractmethod
     async def get_transaction_by_transaction_id(self, transaction_id: str) -> object: ...
@@ -88,50 +95,44 @@ class BaseTransactionManager:
     async def get_transactions_by_wallet_address(self, address: str) -> List[object]: ...
 
 
-class BasePaymentManager:
+class BaseWalletManager:
 
-    def __init__(self, logger: logging, **kwargs):
-        self.logger = logger
+    def __init__(self, cls_smart_contract: Type[BaseSmartContract], **kwargs):
+        self.smart_contract = cls_smart_contract
 
     @abc.abstractmethod
     async def get_balance(self, token: str) -> decimal.Decimal: ...
 
     @abc.abstractmethod
-    async def create_transaction(self, from_: str, to: str, amount: decimal.Decimal) -> object: ...
-
-    @abc.abstractmethod
-    async def send_transaction(self, transaction_hash: str, private_key: str) -> object: ...
+    async def get_optimal_fee(self, from_: str, to: str, amount: decimal.Decimal) -> decimal.Decimal: ...
 
 
 class BaseNode:
     gate_url: str
 
-    smart_contract: Type[BaseSmartContract]
+    cls_smart_contract: Type[BaseSmartContract]
 
-    block_manager: Type[BaseBlockManager]
-    transaction_manager: Type[BaseTransactionManager]
-    payment_manager: Type[BasePaymentManager]
+    cls_block_manager: Type[BaseBlockManager]
+    cls_transaction_manager: Type[BaseTransactionManager]
+    cls_wallet_manager: Type[BaseWalletManager]
 
     cls_response_transaction: DefaultTransaction
     cls_response_block: DefaultBlock
 
     def __init__(self, **kwargs):
-        self.__block = self.block_manager(
+        self.__block = self.cls_block_manager(
             gate=kwargs.get('gate')
         )
-        self.__transaction = self.transaction_manager(
+        self.__transaction = self.cls_transaction_manager(
             gate=kwargs.get('gate'),
             logger=kwargs.get('logger'),
-            smart_contract=self.smart_contract
+            cls_smart_contract=self.cls_smart_contract
         )
-        self.__payment = self.payment_manager(
+        self.__wallet = self.cls_wallet_manager(
             gate=kwargs.get('gate'),
             logger=kwargs.get('logger'),
-            smart_contract=self.smart_contract
+            cls_smart_contract=self.cls_smart_contract
         )
-
-    @abc.abstractproperty
-    def node(self): ...
 
     def block(self) -> BaseBlockManager:
         return self.__block
@@ -139,5 +140,8 @@ class BaseNode:
     def transaction(self) -> BaseTransactionManager:
         return self.__transaction
 
-    def payment(self) -> BasePaymentManager:
-        return self.__payment
+    def wallet(self) -> BaseWalletManager:
+        return self.__wallet
+
+    @abc.abstractproperty
+    def node(self): ...
