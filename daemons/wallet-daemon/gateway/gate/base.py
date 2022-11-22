@@ -1,70 +1,62 @@
+import os
 import abc
 import decimal
-import logging
-from dataclasses import dataclass
 from typing import NoReturn, Type, List
 
 import aiofiles
 
-
-@dataclass()
-class DefaultBlockHeader:
-    block: int
-    timestamp: int
-
-
-@dataclass()
-class DefaultParticipant:
-    address: str
-    amount: decimal.Decimal
+import meta
+import src.settings as settings
+import gateway.logger as logger
+from gateway.schemas import BlockSchema, TransactionSchema
 
 
-@dataclass()
-class DefaultTransaction:
-    transactionId: str
-    amount: decimal.Decimal
-    fee: decimal.Decimal
-    inputs: List[DefaultParticipant]
-    outputs: List[DefaultParticipant]
-    timestamp: int
-    token: str
+class AbstractNode:
+    network_name: str
+    node_url: str
+
+    class SmartContract(abc.ABC):
+        @abc.abstractclassmethod
+        async def connect(cls): ...
+
+    @property
+    def network(self) -> str:
+        return self.network
+
+    @abc.abstractmethod
+    async def get_block(self, block_number: int) -> BlockSchema: ...
+
+    @abc.abstractmethod
+    async def get_latest_block_number(self) -> int: ...
 
 
-@dataclass()
-class DefaultBlock:
-    headers: DefaultBlockHeader
-    transactions: List[DefaultTransaction]
+class DefaultBlockManager:
+    class FileBlockManager:
 
-
-class BaseNode:
-    pass
-
-
-class BaseBlockManager:
-    file_path: str
-
-    class FileManager:
-
-        def __init__(self, file: str):
-            self.file = file
+        def __init__(self, name: str):
+            self.file_path = os.path.join(settings.BLOCKS_DIR, f'{name}_block.txt')
 
         async def write(self, block_number: int) -> NoReturn:
-            async with aiofiles.open(self.file, 'w', encoding='utf-8') as file:
+            async with aiofiles.open(self.file_path, 'w', encoding='utf-8') as file:
                 await file.write(str(block_number))
 
         async def read(self) -> str:
-            async with aiofiles.open(self.file, "r", encoding='utf-8') as file:
+            async with aiofiles.open(self.file_path, "r", encoding='utf-8') as file:
                 return await file.read()
 
-    def __init__(self, *args, **kwargs):
-        self.gate = kwargs.get('gate')
-        self.manager = self.FileManager(file=self.file_path)
+    __slots__ = (
+        '__node', 'manager'
+    )
 
-    async def get_block_by_id(self, block: int) -> DefaultBlock:
-        return await self.gate.get_latest_block(block)
+    def __init__(self, node: AbstractNode):
+        self.__node = node
+        self.manager = self.FileBlockManager(name=self.__node.network)
 
-    async def get_block_number(self) -> int:
-        return await self.gate.get_latest_block_number()
+    async def get_block_by_id(self, block_number: int) -> BlockSchema:
+        return await self.__node.get_block(block_number)
+
+    async def get_latest_block_number(self) -> int:
+        return await self.__node.get_latest_block_number()
 
     # Daemon function
 
@@ -72,85 +64,79 @@ class BaseBlockManager:
         block_number = await self.manager.read()
         if block_number:
             return int(block_number)
-        return await self.get_block_number()
+        return await self.get_latest_block_number()
 
     async def save_block_to_storage(self, block: int) -> NoReturn:
         return await self.manager.write(block_number=block)
 
 
-class BaseSmartContract:
+class DefaultTransactionManager:
+    __slots__ = (
+        'logger', '__node'
+    )
 
-    @abc.abstractclassmethod
-    async def connect(cls, address: str): ...
+    def __init__(self, node: AbstractNode, cls_logger: Type):
+        self.logger = cls_logger()
+        self.__node = node
 
+    async def create_transaction(self, from_: str, to: str, amount: decimal.Decimal):
+        pass
 
-class BaseTransactionManager:
+    async def send_transaction(self, transaction_hash: str, private_key: str) -> TransactionSchema:
+        pass
 
-    def __init__(self, logger: logging, cls_smart_contract: Type[BaseSmartContract], **kwargs):
-        self.logger = logger
-        self.smart_contract = cls_smart_contract
+    async def get_transaction_by_transaction_id(self, transaction_id: str) -> TransactionSchema:
+        pass
 
-    @abc.abstractmethod
-    async def create_transaction(self, from_: str, to: str, amount: decimal.Decimal) -> object: ...
-
-    @abc.abstractmethod
-    async def send_transaction(self, transaction_hash: str, private_key: str) -> DefaultTransaction: ...
-
-    @abc.abstractmethod
-    async def get_transaction_by_transaction_id(self, transaction_id: str) -> DefaultTransaction: ...
-
-    @abc.abstractmethod
-    async def get_transactions_by_wallet_address(self, address: str) -> List[DefaultTransaction]: ...
+    async def get_transactions_by_wallet_address(self, address: str) -> List[TransactionSchema]:
+        pass
 
 
-class BaseWalletManager:
+class DefaultWalletManager:
+    __slots__ = (
+        'logger', '__node'
+    )
 
-    def __init__(self, cls_smart_contract: Type[BaseSmartContract], **kwargs):
-        self.smart_contract = cls_smart_contract
+    def __init__(self, node: AbstractNode, cls_logger: Type):
+        self.logger = cls_logger()
+        self.__node = node
 
-    @abc.abstractmethod
-    async def get_balance(self, token: str) -> decimal.Decimal: ...
+    async def get_balance(self, token: str) -> decimal.Decimal:
+        pass
 
-    @abc.abstractmethod
-    async def get_optimal_fee(self, from_: str, to: str, amount: decimal.Decimal) -> decimal.Decimal: ...
+    async def get_optimal_fee(self, from_: str, to: str, amount: decimal.Decimal) -> decimal.Decimal:
+        pass
 
 
 class BaseGateClient:
-    cls_node: Type[BaseNode]
+    cls_node: Type[AbstractNode]
 
-    cls_smart_contract: Type[BaseSmartContract]
+    logger: Type[meta.Logger] = logger.GateClientLogger
 
-    cls_block_manager: Type[BaseBlockManager]
-    cls_transaction_manager: Type[BaseTransactionManager]
-    cls_wallet_manager: Type[BaseWalletManager]
+    block_manager: Type[DefaultBlockManager] = DefaultBlockManager
+    transaction_manager: Type[DefaultTransactionManager] = DefaultTransactionManager
+    wallet_manager: Type[DefaultWalletManager] = DefaultWalletManager
 
-    cls_response_transaction: DefaultTransaction
-    cls_response_block: DefaultBlock
+    __slots__ = (
+        '__node_manager', '__block_manager',
+        '__transaction_manager', '__wallet_manager'
+    )
 
     def __init__(self, **kwargs):
-        self.node = self.cls_node()
+        self.__node_manager = self.cls_node()
 
-        self.__block = self.cls_block_manager(
-            node=self.node
-        )
-        self.__transaction = self.cls_transaction_manager(
-            node=self.node,
-            logger=kwargs.get('logger'),
-            cls_smart_contract=self.cls_smart_contract
-        )
-        self.__wallet = self.cls_wallet_manager(
-            node=self.node,
-            logger=kwargs.get('logger'),
-            cls_smart_contract=self.cls_smart_contract
-        )
+        self.__block_manager = self.block_manager(node=self.__node_manager)
+        self.__transaction_manager = self.transaction_manager(node=self.__node_manager, cls_logger=self.logger)
+        self.__wallet_manager = self.wallet_manager(node=self.__node_manager, cls_logger=self.logger)
 
-    def block(self) -> BaseBlockManager:
-        return self.__block
+    def block(self) -> DefaultBlockManager:
+        return self.__block_manager
 
-    def transaction(self) -> BaseTransactionManager:
-        return self.__transaction
+    def transaction(self) -> DefaultTransactionManager:
+        return self.__transaction_manager
 
-    def wallet(self) -> BaseWalletManager:
-        return self.__wallet
+    def wallet(self) -> DefaultWalletManager:
+        return self.__wallet_manager
 
-    def node(self): ...
+    def node(self) -> AbstractNode:
+        return self.__node_manager
