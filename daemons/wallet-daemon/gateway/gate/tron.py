@@ -1,5 +1,5 @@
 import decimal
-from typing import Optional
+from typing import Optional, Union
 
 from tronpy.async_tron import AsyncContract
 
@@ -27,7 +27,19 @@ class Node(base.AbstractNode):
         self.node = AsyncTron(provider=AsyncHTTPProvider(endpoint_uri=self.endpoint_uri))
 
         self.decimals = decimal.Context()
-        self.decimals.prec = 6
+        self.decimals.prec = 8
+
+    @staticmethod
+    def from_sun(num: Union[int, float]) -> decimal.Decimal:
+        if num == 0:
+            return decimal.Decimal('0')
+        if num < 0 or num > 2**256 - 1:
+            raise ValueError("Value must be between 1 and 2**256 - 1")
+        with decimal.localcontext() as ctx:
+            ctx.prec = 999
+            d_num = decimal.Decimal(value=num, context=ctx)
+            result = d_num / decimal.Decimal("1000000")
+        return result
 
     async def get_block(self, block_number: int) -> BlockSchema:
         response = await self.node.get_block(block_number)
@@ -38,14 +50,11 @@ class Node(base.AbstractNode):
         transactions = []
         for transaction in response['transactions']:
             token = None
-            fee = self.decimals.create_decimal(0)
 
             contract = transaction['raw_data']['contract']
 
             if contract[0]['type'] == 'TransferContract':
                 amount = self.decimals.create_decimal(contract[0]['parameter']['value']['amount'])
-                fee = self.decimals.create_decimal(0)
-
                 inputs = [ParticipantSchema(
                     address=contract[0]['parameter']['value']['owner_address'],
                     amount=amount
@@ -54,15 +63,26 @@ class Node(base.AbstractNode):
                     address=contract[0]['parameter']['value']['to_address'],
                     amount=amount
                 )]
-
-            elif contract['type'] == '':
-                amount = 0
-                fee = 0
-                inputs = []
-                outputs = []
+            elif contract['type'] == 'TriggerSmartContract' and 140 > len(contract[0]["parameter"]["value"]["data"]) > 130:
+                data = contract[0]["parameter"]["value"]["data"]
+                smart_contract = await self.SmartContract.connect(contract[0]["parameter"]["value"]["contract_address"])
+                amount = int("0x" + data[72:], 0) / await smart_contract.functions.decimals
+                inputs = [ParticipantSchema(
+                    address=contract[0]['parameter']['value']['owner_address'],
+                    amount=amount
+                )]
+                outputs = [ParticipantSchema(
+                    address=self.node.to_base58check_address("41" + data[32:72]),
+                    amount=amount
+                )]
             else:
                 continue
 
+            transaction_fee = await self.node.get_transaction_info(transaction['txID'])
+            if 'fee' not in transaction_fee:
+                fee = self.from_sun(transaction_fee['fee'])
+            else:
+                fee = self.decimals.create_decimal('0')
             transactions.append(TransactionSchema(
                 transactionId=transaction['txID'],
                 amount=amount,
@@ -92,3 +112,11 @@ class Node(base.AbstractNode):
                 amount = amount / 10 ** token['decimals']
 
         return self.decimals.create_decimal(amount)
+
+
+def main():
+    import asyncio
+    import json
+    node = Node()
+    # asyncio.run(node.get_block())
+    data = asyncio.run(node.node.get_block())
