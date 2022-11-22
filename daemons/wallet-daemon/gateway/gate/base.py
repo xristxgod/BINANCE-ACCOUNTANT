@@ -13,7 +13,7 @@ from gateway.schemas import BlockSchema, TransactionSchema
 
 class AbstractNode:
     network_name: str
-    node_url: str
+    endpoint_uri: str
 
     class SmartContract(abc.ABC):
         @abc.abstractclassmethod
