@@ -1,7 +1,7 @@
 import decimal
 from typing import Optional, Union
 
-from tronpy.async_tron import AsyncContract
+from tronpy.async_tron import AsyncContract, TAddress
 
 import src.settings as settings
 import gateway.gate.base as base
@@ -30,7 +30,7 @@ class Node(base.AbstractNode):
         self.decimals.prec = 8
 
     @staticmethod
-    def from_sun(num: Union[int, float]) -> decimal.Decimal:
+    def from_sun(num) -> decimal.Decimal:
         if num == 0:
             return decimal.Decimal('0')
         if num < 0 or num > 2**256 - 1:
@@ -40,6 +40,43 @@ class Node(base.AbstractNode):
             d_num = decimal.Decimal(value=num, context=ctx)
             result = d_num / decimal.Decimal("1000000")
         return result
+
+    @staticmethod
+    def to_sun(num) -> int:
+        """
+        Helper function that will convert a value in TRX to SUN
+        :param num: Value in TRX to convert to SUN
+        """
+        if isinstance(num, int) or isinstance(num, str):
+            d_num = decimal.Decimal(value=num)
+        elif isinstance(num, float):
+            d_num = decimal.Decimal(value=str(num))
+        elif isinstance(num, decimal.Decimal):
+            d_num = num
+        else:
+            raise TypeError("Unsupported type. Must be one of integer, float, or string")
+
+        s_num = str(num)
+        unit_value = decimal.Decimal("1000000")
+
+        if d_num == 0:
+            return 0
+
+        if d_num < 1 and "." in s_num:
+            with decimal.localcontext() as ctx:
+                multiplier = len(s_num) - s_num.index(".") - 1
+                ctx.prec = multiplier
+                d_num = decimal.Decimal(value=num, context=ctx) * 10 ** multiplier
+            unit_value /= 10 ** multiplier
+
+        with decimal.localcontext() as ctx:
+            ctx.prec = 999
+            result = decimal.Decimal(value=d_num, context=ctx) * unit_value
+
+        if result < 0 or result > 2**256 - 1:
+            raise ValueError("Resulting wei value must be between 1 and 2**256 - 1")
+
+        return int(result)
 
     async def get_block(self, block_number: int) -> BlockSchema:
         response = await self.node.get_block(block_number)
@@ -83,6 +120,7 @@ class Node(base.AbstractNode):
                 fee = self.from_sun(transaction_fee['fee'])
             else:
                 fee = self.decimals.create_decimal('0')
+
             transactions.append(TransactionSchema(
                 transactionId=transaction['txID'],
                 amount=amount,
@@ -101,7 +139,7 @@ class Node(base.AbstractNode):
     async def get_latest_block_number(self) -> int:
         return await self.node.get_latest_block_number()
 
-    async def get_balance(self, address: str, token: Optional[str] = None) -> decimal.Decimal:
+    async def get_balance(self, address: TAddress, token: Optional[str] = None) -> decimal.Decimal:
         if not token:
             amount = await self.node.get_account_balance(address)
         else:
@@ -113,10 +151,16 @@ class Node(base.AbstractNode):
 
         return self.decimals.create_decimal(amount)
 
+    async def create_transaction(
+            self, from_: TAddress, to: TAddress, amount: decimal.Decimal, token: Optional[str] = None
+    ):
+        if not token:
+            raw_data = self.node.trx.transfer(from_, to=to, amount=self.to_sun(amount))
+        else:
+            pass
 
-def main():
-    import asyncio
-    import json
-    node = Node()
-    # asyncio.run(node.get_block())
-    data = asyncio.run(node.node.get_block())
+    async def sing_transaction(self, transaction_hash: str, private_key: str) -> str:
+        pass
+
+    async def send_transaction(self):
+        pass
