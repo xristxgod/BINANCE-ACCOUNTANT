@@ -1,9 +1,16 @@
 import decimal
+from typing import Optional
+
+from tronpy.async_tron import AsyncContract
 
 import src.settings as settings
 import gateway.gate.base as base
-
 from gateway.schemas import BlockHeaderSchema, ParticipantSchema, TransactionSchema, BlockSchema
+
+
+TOKENS = {
+    'USDT': {'address': '...', 'decimals': 8}
+}
 
 
 class Node(base.AbstractNode):
@@ -12,8 +19,8 @@ class Node(base.AbstractNode):
 
     class SmartContract:
         @classmethod
-        async def connect(cls):
-            pass
+        async def connect(cls, address: str) -> AsyncContract:
+            return AsyncContract(address)
 
     def __init__(self):
         from tronpy.async_tron import AsyncTron, AsyncHTTPProvider
@@ -70,3 +77,18 @@ class Node(base.AbstractNode):
             headers=headers,
             transactions=transactions
         )
+
+    async def get_latest_block_number(self) -> int:
+        return await self.node.get_latest_block_number()
+
+    async def get_balance(self, address: str, token: Optional[str] = None) -> decimal.Decimal:
+        if not token:
+            amount = await self.node.get_account_balance(address)
+        else:
+            token = TOKENS[token]
+            contract = await self.SmartContract.connect(token['address'])
+            amount = await contract.functions.balanceOf(address)
+            if amount > 0:
+                amount = amount / 10 ** token['decimals']
+
+        return self.decimals.create_decimal(amount)

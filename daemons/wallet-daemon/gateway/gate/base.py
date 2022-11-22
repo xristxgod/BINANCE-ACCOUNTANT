@@ -1,7 +1,7 @@
 import os
 import abc
 import decimal
-from typing import NoReturn, Type, List
+from typing import NoReturn, Type, Optional, List
 
 import aiofiles
 
@@ -17,7 +17,7 @@ class AbstractNode:
 
     class SmartContract(abc.ABC):
         @abc.abstractclassmethod
-        async def connect(cls): ...
+        async def connect(cls, address: str): ...
 
     @property
     def network(self) -> str:
@@ -28,6 +28,9 @@ class AbstractNode:
 
     @abc.abstractmethod
     async def get_latest_block_number(self) -> int: ...
+
+    @abc.abstractmethod
+    async def get_balance(self, address: str, token: Optional[str] = None) -> decimal.Decimal: ...
 
 
 class DefaultBlockManager:
@@ -101,8 +104,8 @@ class DefaultWalletManager:
         self.logger = cls_logger()
         self.__node = node
 
-    async def get_balance(self, token: str) -> decimal.Decimal:
-        pass
+    async def get_balance(self, address: str, token: str) -> decimal.Decimal:
+        return await self.__node.get_balance(address=address, token=token)
 
     async def get_optimal_fee(self, from_: str, to: str, amount: decimal.Decimal) -> decimal.Decimal:
         pass
