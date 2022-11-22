@@ -1,7 +1,5 @@
 import abc
 
-import daemon.core as core
-
 
 class BaseDaemon(abc.ABC):
     core: core.BaseDaemonCore
