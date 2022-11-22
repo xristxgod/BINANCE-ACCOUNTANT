@@ -1,6 +1,6 @@
 import decimal
 from dataclasses import dataclass
-from typing import List
+from typing import Optional, List
 
 
 @dataclass()
@@ -23,7 +23,7 @@ class TransactionSchema:
     inputs: List[ParticipantSchema]
     outputs: List[ParticipantSchema]
     timestamp: int
-    token: str
+    token: Optional[str] = None
 
 
 @dataclass()

@@ -1,7 +1,6 @@
 import os
 import logging
-import enum as e
-from typing import NoReturn, Tuple, Dict
+from typing import Tuple, Dict
 
 import src.settings as settings
 
@@ -31,20 +30,8 @@ class MetaLogger(type):
         return
 
 
-class Methods(e.Enum):
-    DEBUG = 'debug'
-    INFO = 'info'
-    ERROR = 'error'
-    WARNING = 'warning'
-    CRITICAL = 'critical'
-
-
 class Logger(metaclass=MetaLogger):
-
-    @classmethod
-    def log(cls, method: Methods, message: str) -> NoReturn:
-        getattr(cls.logger, method.value)(message)
-
+    pass
 
 
 class Singleton(metaclass=SingletonMeta):

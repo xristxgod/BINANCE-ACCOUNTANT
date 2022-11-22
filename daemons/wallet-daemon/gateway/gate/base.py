@@ -111,7 +111,7 @@ class DefaultWalletManager:
 class BaseGateClient:
     cls_node: Type[AbstractNode]
 
-    logger: Type[meta.Logger] = logger.GateClientLogger
+    # logger: Type[meta.Logger] = logger.GateClientLogger
 
     block_manager: Type[DefaultBlockManager] = DefaultBlockManager
     transaction_manager: Type[DefaultTransactionManager] = DefaultTransactionManager
