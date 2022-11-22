@@ -1,7 +1,7 @@
 from typing import NoReturn
 
 import src.settings as settings
-import src.gate.base as base
+import gateway.gate.base as base
 
 
 class BlockManager(base.BaseBlockManager):
@@ -34,6 +34,7 @@ class Node(base.BaseNode):
 
     block_manager = BlockManager
     transaction_manager = TransactionManager
+    logger = ''
 
     def __init__(self, **kwargs):
         from tronpy.async_tron import AsyncTron, AsyncHTTPProvider

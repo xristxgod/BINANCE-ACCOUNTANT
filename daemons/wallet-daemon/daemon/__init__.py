@@ -1,8 +1,6 @@
 import abc
 
-import src.daemon.core as core
-import src.daemon.node as node
-from src.gateway import InternalGateway
+import daemon.core as core
 
 
 class BaseDaemon(abc.ABC):

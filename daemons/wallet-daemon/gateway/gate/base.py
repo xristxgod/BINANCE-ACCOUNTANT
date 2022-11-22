@@ -1,7 +1,18 @@
 import abc
+import logging
 from typing import NoReturn, Type
 
-from src.services import FileBlockController
+
+class FileBlockController:
+
+    def __init__(self, file: str):
+        pass
+
+    async def write(self, block: int):
+        pass
+
+    async def read(self):
+        pass
 
 
 class BaseBlockManager:
@@ -22,7 +33,9 @@ class BaseBlockManager:
 
 
 class BaseTransactionManager:
-    pass
+
+    def __init__(self, logger: logging, **kwargs):
+        pass
 
 
 class BaseNode:
