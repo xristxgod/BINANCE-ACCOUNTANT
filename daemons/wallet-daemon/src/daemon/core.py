@@ -16,4 +16,3 @@ class TronDaemonCore(BaseDaemonCore, meta.Singleton):
     @property
     def node(self):
         return self.__node
-
