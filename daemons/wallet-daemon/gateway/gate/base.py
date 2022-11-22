@@ -140,3 +140,9 @@ class BaseGateClient:
 
     def node(self) -> AbstractNode:
         return self.__node_manager
+
+
+__all__ = [
+    'BaseGateClient',
+    'AbstractNode'
+]
