@@ -1,6 +1,6 @@
 import decimal
-from dataclasses import dataclass
-from typing import Optional, List
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict
 
 
 @dataclass()
@@ -13,6 +13,13 @@ class BlockHeaderSchema:
 class ParticipantSchema:
     address: str
     amount: decimal.Decimal
+
+
+@dataclass()
+class RawTransaction:
+    rawData: str
+    fee: str
+    extra: Dict = field(default_factory=dict)
 
 
 @dataclass()

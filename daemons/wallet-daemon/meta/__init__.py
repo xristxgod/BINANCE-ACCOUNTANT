@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Tuple, Dict
+from typing import Optional, Tuple, Dict
 
 import src.settings as settings
 
@@ -16,6 +16,8 @@ class SingletonMeta(type):
 
 
 class MetaLogger(type):
+    logger: Optional[logging.Logger]
+
     def __new__(mcs, class_name: str, bases: Tuple, attrs: Dict, **kwargs):
         logger_obj = super(MetaLogger, mcs).__new__(mcs, class_name, bases, attrs)
         if attrs.get('path') is not None:

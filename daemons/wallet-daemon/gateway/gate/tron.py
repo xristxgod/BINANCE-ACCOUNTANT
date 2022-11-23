@@ -2,10 +2,11 @@ import decimal
 from typing import Optional, Union
 
 from tronpy.async_tron import AsyncContract, TAddress
+from tronpy.async_tron import AsyncTron, AsyncHTTPProvider
 
 import src.settings as settings
 import gateway.gate.base as base
-from gateway.schemas import BlockHeaderSchema, ParticipantSchema, TransactionSchema, BlockSchema
+from gateway.schemas import BlockHeaderSchema, ParticipantSchema, TransactionSchema, BlockSchema, RawTransaction
 
 
 TOKENS = {
@@ -23,7 +24,6 @@ class Node(base.AbstractNode):
             return AsyncContract(address)
 
     def __init__(self):
-        from tronpy.async_tron import AsyncTron, AsyncHTTPProvider
         self.node = AsyncTron(provider=AsyncHTTPProvider(endpoint_uri=self.endpoint_uri))
 
         self.decimals = decimal.Context()
@@ -153,14 +153,20 @@ class Node(base.AbstractNode):
 
     async def create_transaction(
             self, from_: TAddress, to: TAddress, amount: decimal.Decimal, token: Optional[str] = None
-    ):
+    ) -> RawTransaction:
         if not token:
             raw_data = self.node.trx.transfer(from_, to=to, amount=self.to_sun(amount))
         else:
             pass
 
-    async def sing_transaction(self, transaction_hash: str, private_key: str) -> str:
-        pass
+        raise NotImplementedError
 
-    async def send_transaction(self):
-        pass
+    async def sing_transaction(self, raw_data: str, private_key: str) -> str:
+        raise NotImplementedError
+
+    async def send_transaction(self, raw_transaction: str) -> TransactionSchema:
+        raise NotImplementedError
+
+
+class GateClient(base.BaseGateClient):
+    cls_node = Node

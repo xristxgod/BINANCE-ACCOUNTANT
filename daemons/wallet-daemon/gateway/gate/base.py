@@ -8,7 +8,7 @@ import aiofiles
 import meta
 import src.settings as settings
 import gateway.logger as logger
-from gateway.schemas import BlockSchema, TransactionSchema
+from gateway.schemas import BlockSchema, TransactionSchema, RawTransaction
 
 
 class AbstractNode:
@@ -31,6 +31,17 @@ class AbstractNode:
 
     @abc.abstractmethod
     async def get_balance(self, address: str, token: Optional[str] = None) -> decimal.Decimal: ...
+
+    @abc.abstractmethod
+    async def create_transaction(
+            self, from_: str, to: str, amount: decimal.Decimal, token: Optional[str] = None
+    ) -> RawTransaction: ...
+
+    @abc.abstractmethod
+    async def sing_transaction(self, raw_data: str, private_key: str) -> str: ...
+
+    @abc.abstractmethod
+    async def send_transaction(self, raw_transaction: str) -> TransactionSchema: ...
 
 
 class DefaultBlockManager:
@@ -114,8 +125,6 @@ class DefaultWalletManager:
 class BaseGateClient:
     cls_node: Type[AbstractNode]
 
-    # logger: Type[meta.Logger] = logger.GateClientLogger
-
     block_manager: Type[DefaultBlockManager] = DefaultBlockManager
     transaction_manager: Type[DefaultTransactionManager] = DefaultTransactionManager
     wallet_manager: Type[DefaultWalletManager] = DefaultWalletManager
@@ -128,9 +137,19 @@ class BaseGateClient:
     def __init__(self, **kwargs):
         self.__node_manager = self.cls_node()
 
+        self.logger = self.__get_logger(self.__node_manager.network)
+
         self.__block_manager = self.block_manager(node=self.__node_manager)
         self.__transaction_manager = self.transaction_manager(node=self.__node_manager, cls_logger=self.logger)
         self.__wallet_manager = self.wallet_manager(node=self.__node_manager, cls_logger=self.logger)
+    
+    @classmethod
+    def __get_logger(cls, network: str = 'base') -> Type:
+        return type(
+            f'{network.title()}GateClientLogger',
+            (logger.meta.Logger,), 
+            {'path': f'{network.lower()}_gate_logger.log'}
+        )
 
     def block(self) -> DefaultBlockManager:
         return self.__block_manager
